@@ -68,12 +68,13 @@ const portfolio = {
   }
 };
 
-// Six open-plan rooms, connected by 1.8 m passages through the partitions.
 const stations = [
   { id: 'about', position: [-8, 1.7, 4.7] }, { id: 'skills', position: [0, 1.7, 4.7] }, { id: 'projects', position: [8, 1.7, 4.7] },
   { id: 'content', position: [-8, 1.7, -4.7] }, { id: 'internships', position: [0, 1.7, -4.7] }, { id: 'contact', position: [8, 1.7, -4.7] }
 ];
 const INTERACT_DISTANCE = 3.1;
+const PLAYER_EYE_HEIGHT = 1.7;
+const PLAYER_RADIUS = 0.38;
 
 function makeTextTexture(title, subtitle) {
   const canvas = document.createElement('canvas');
@@ -93,7 +94,9 @@ function createScene(container, quality, onNearby, onLocked) {
   scene.background = new THREE.Color('#b6c8cf');
   scene.fog = new THREE.FogExp2('#b6c8cf', 0.0085);
   const camera = new THREE.PerspectiveCamera(68, container.clientWidth / container.clientHeight, 0.1, 180);
-  camera.position.set(0, 1.7, 18);
+  // The camera is local to the player. Keep its local position at the origin so
+  // the player controller's eye-height offset is applied exactly once.
+  camera.position.set(0, 0, 0);
   const renderer = new THREE.WebGLRenderer({ antialias: quality !== 'low', powerPreference: 'high-performance' });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, quality === 'high' ? 1.75 : 1.25));
   renderer.setSize(container.clientWidth, container.clientHeight);
@@ -105,6 +108,8 @@ function createScene(container, quality, onNearby, onLocked) {
   container.appendChild(renderer.domElement);
 
   const controls = new PointerLockControls(camera, renderer.domElement);
+  // The controller object represents the visitor's eye position, not their feet.
+  controls.getObject().position.set(0, PLAYER_EYE_HEIGHT, 18);
   scene.add(controls.getObject());
   controls.addEventListener('lock', () => onLocked(true));
   controls.addEventListener('unlock', () => onLocked(false));
@@ -133,7 +138,6 @@ function createScene(container, quality, onNearby, onLocked) {
   terrain.receiveShadow = true;
   scene.add(terrain);
 
-  // Distant subdued ridge forms add atmospheric depth; the immediate walking area remains level.
   const ridgeMaterial = new THREE.MeshStandardMaterial({ color: '#7d8b83', roughness: 1, flatShading: true });
   for (let i = 0; i < 13; i += 1) {
     const ridge = new THREE.Mesh(new THREE.IcosahedronGeometry(1, 1), ridgeMaterial);
@@ -145,7 +149,6 @@ function createScene(container, quality, onNearby, onLocked) {
     scene.add(ridge);
   }
 
-  // Instanced vegetation keeps draw calls low; restrained layered crowns avoid toy-like spheres.
   const treeData = [];
   let seed = 19371;
   const random = () => { seed = (seed * 1664525 + 1013904223) >>> 0; return seed / 4294967296; };
@@ -176,7 +179,6 @@ function createScene(container, quality, onNearby, onLocked) {
   });
   scene.add(trunks, crowns);
 
-  // Lake away from the visitor route. Physically based but intentionally restrained water.
   const lake = new THREE.Mesh(new THREE.CircleGeometry(9, 80), new THREE.MeshPhysicalMaterial({ color: '#779ba0', roughness: 0.24, metalness: 0.03, clearcoat: 0.75, clearcoatRoughness: 0.18 }));
   lake.rotation.x = -Math.PI / 2; lake.position.set(24, 0.12, -18); lake.receiveShadow = true; scene.add(lake);
   const shore = new THREE.Mesh(new THREE.RingGeometry(9, 10.1, 80), new THREE.MeshStandardMaterial({ color: '#887d65', roughness: 1, side: THREE.DoubleSide }));
@@ -192,34 +194,35 @@ function createScene(container, quality, onNearby, onLocked) {
     const mesh = new THREE.Mesh(new THREE.BoxGeometry(...size), material);
     mesh.position.set(...pos); mesh.castShadow = cast && quality !== 'low'; mesh.receiveShadow = true; parent.add(mesh); return mesh;
   };
-  // Single level, open roof so the visitor can see interiors; sensible 24 x 16 m dimensions.
   addBox(mansion, [24, .38, 16], [0, .1, 0], floorMat, false);
   addBox(mansion, [24, .3, 1.2], [0, 3.35, -8], timber);
   addBox(mansion, [1.2, 3.3, 16], [-12, 1.8, 0], stone);
   addBox(mansion, [1.2, 3.3, 16], [12, 1.8, 0], stone);
-  // Front facade leaves a central 3 m entrance; rear is continuous.
+  // Front facade has an aligned 4.8 m entrance opening.
   addBox(mansion, [9.6, 3.3, .45], [-7.2, 1.8, 8], stone);
   addBox(mansion, [9.6, 3.3, .45], [7.2, 1.8, 8], stone);
   addBox(mansion, [24, 3.3, .45], [0, 1.8, -8], stone);
-  // Open door frame and overhead lintel.
-  addBox(mansion, [.18, 3.3, .55], [-1.5, 1.8, 8], timber);
-  addBox(mansion, [.18, 3.3, .55], [1.5, 1.8, 8], timber);
-  addBox(mansion, [3.15, .22, .58], [0, 3.48, 8], timber);
-  // Interior partitions with centered openings to create a navigable 3 x 2 room plan.
+  addBox(mansion, [.18, 3.3, .55], [-2.4, 1.8, 8], timber);
+  addBox(mansion, [.18, 3.3, .55], [2.4, 1.8, 8], timber);
+  addBox(mansion, [4.8, .22, .58], [0, 3.48, 8], timber);
+
+  // Three interior partitions form an open central circulation route. The
+  // z=0 wall has 2.4 m openings at x=-8, 0 and 8, joining every room to it.
   [-4, 4].forEach((x) => {
     addBox(mansion, [.22, 3.1, 6.4], [x, 1.7, -4.8], stone);
     addBox(mansion, [.22, 3.1, 6.4], [x, 1.7, 4.8], stone);
     addBox(mansion, [.22, .35, 3.2], [x, 3.05, 0], timber);
   });
-  // Central cross partition, with door openings aligned to each room aisle.
-  [-8, 0, 8].forEach((x) => {
-    const left = x - 3.1, right = x + 3.1;
-    if (left > -12) addBox(mansion, [Math.max(0.1, left + 12), 3.1, .2], [(-12 + left) / 2, 1.7, 0], stone);
-    if (right < 12) addBox(mansion, [Math.max(0.1, 12 - right), 3.1, .2], [(right + 12) / 2, 1.7, 0], stone);
-    addBox(mansion, [6.2, .35, .22], [x, 3.05, 0], timber);
+  const corridorWallSegments = [
+    { start: -12, end: -9.2 }, { start: -6.8, end: -1.2 },
+    { start: 1.2, end: 6.8 }, { start: 9.2, end: 12 }
+  ];
+  corridorWallSegments.forEach(({ start, end }) => {
+    addBox(mansion, [end - start, 3.1, .2], [(start + end) / 2, 1.7, 0], stone);
   });
+  // Raised timber lintels make each corridor opening read as a doorway.
+  [-8, 0, 8].forEach((x) => addBox(mansion, [2.4, .35, .22], [x, 3.05, 0], timber));
 
-  // Window glazing and mullions on front/rear facades.
   [-9, -6, -3, 3, 6, 9].forEach((x) => {
     const pane = addBox(mansion, [1.7, 1.45, .08], [x, 2.05, 7.72], glass, false);
     pane.castShadow = false;
@@ -227,13 +230,11 @@ function createScene(container, quality, onNearby, onLocked) {
     addBox(mansion, [.08, 1.55, .12], [x, 2.05, 7.65], timber, false);
     const rearPane = addBox(mansion, [1.8, 1.45, .08], [x, 2.05, -7.72], glass, false); rearPane.castShadow = false;
   });
-  // Roof fascia and covered entry canopy.
   addBox(mansion, [24.7, .28, .32], [0, 3.65, 7.86], timber);
   addBox(mansion, [24.7, .28, .32], [0, 3.65, -7.86], timber);
   addBox(mansion, [5.2, .22, 2.7], [0, 3.65, 9.0], timber);
   [-2.2, 2.2].forEach((x) => addBox(mansion, [.18, 3.35, .18], [x, 1.8, 9.8], timber));
 
-  // Room furnishings: wood desks, shelves, seating and wall-mounted information plaques.
   const roomFurniture = [
     { id: 'about', x: -8, z: 4.7, label: 'WELCOME', sub: 'About Vali Basha' },
     { id: 'skills', x: 0, z: 4.7, label: 'SKILLS', sub: 'Data · AI · Tools' },
@@ -242,19 +243,6 @@ function createScene(container, quality, onNearby, onLocked) {
     { id: 'internships', x: 0, z: -4.7, label: 'EXPERIENCE', sub: 'Virtual internships' },
     { id: 'contact', x: 8, z: -4.7, label: 'CONTACT', sub: 'Connect with Vali' }
   ];
-  const collisionBoxes = [
-    { minX: -12, maxX: 12, minZ: -8.3, maxZ: -7.65 },
-    { minX: -12.3, maxX: -11.65, minZ: -8, maxZ: 8.3 },
-    { minX: 11.65, maxX: 12.3, minZ: -8, maxZ: 8.3 },
-    { minX: -12, maxX: -1.65, minZ: 7.7, maxZ: 8.3 },
-    { minX: 1.65, maxX: 12, minZ: 7.7, maxZ: 8.3 },
-    ...[-4, 4].flatMap((x) => [
-      { minX: x - .2, maxX: x + .2, minZ: -8, maxZ: -1.6 },
-      { minX: x - .2, maxX: x + .2, minZ: 1.6, maxZ: 8 }
-    ]),
-    ...[-12, -4.9, 1.1, 7.1].map((x, i) => ({ minX: x, maxX: i === 0 || i === 3 ? x + 3 : x + 3, minZ: -.18, maxZ: .18 }))
-  ];
-
   roomFurniture.forEach((room) => {
     const sign = new THREE.Mesh(new THREE.PlaneGeometry(4.4, 1.45), new THREE.MeshStandardMaterial({ map: makeTextTexture(room.label, room.sub), roughness: .8, metalness: .05 }));
     sign.position.set(room.x, 2.65, room.z < 0 ? -7.82 : 7.82);
@@ -265,14 +253,12 @@ function createScene(container, quality, onNearby, onLocked) {
     addBox(mansion, [.14, .9, .14], [room.x - 1.35, .48, deskZ], timber);
     addBox(mansion, [.14, .9, .14], [room.x + 1.35, .48, deskZ], timber);
     addBox(mansion, [1.7, 1.0, .08], [room.x, 1.85, room.z < 0 ? -7.75 : 7.75], timber, false);
-    // Quiet warm wall lights, non-emissive architecture with restrained illumination.
     const sconce = new THREE.PointLight('#f0d7ae', .45, 5, 2);
     sconce.position.set(room.x, 2.6, room.z < 0 ? -6.9 : 6.9);
     mansion.add(sconce);
   });
   scene.add(mansion);
 
-  // Small exterior path stones lead from start point to front entrance.
   const pathMat = new THREE.MeshStandardMaterial({ color: '#aaa18e', roughness: .95 });
   for (let i = 0; i < 7; i += 1) {
     const slab = new THREE.Mesh(new THREE.BoxGeometry(2.5, .08, 1.35), pathMat);
@@ -286,17 +272,30 @@ function createScene(container, quality, onNearby, onLocked) {
     return { ...station, marker: plaque };
   });
 
+  // Collision volumes correspond to actual solid wall segments. Door gaps in
+  // the front facade, side partitions, and central corridor remain traversable.
+  const collisionBoxes = [
+    { minX: -12, maxX: 12, minZ: -8.3, maxZ: -7.7 },
+    { minX: -12.3, maxX: -11.7, minZ: -8, maxZ: 8 },
+    { minX: 11.7, maxX: 12.3, minZ: -8, maxZ: 8 },
+    { minX: -12, maxX: -2.4, minZ: 7.7, maxZ: 8.3 },
+    { minX: 2.4, maxX: 12, minZ: 7.7, maxZ: 8.3 },
+    ...[-4, 4].flatMap((x) => [
+      { minX: x - .12, maxX: x + .12, minZ: -8, maxZ: -1.6 },
+      { minX: x - .12, maxX: x + .12, minZ: 1.6, maxZ: 8 }
+    ]),
+    ...corridorWallSegments.map(({ start, end }) => ({ minX: start, maxX: end, minZ: -.12, maxZ: .12 }))
+  ];
   const keys = { KeyW: 'forward', ArrowUp: 'forward', KeyS: 'backward', ArrowDown: 'backward', KeyA: 'left', ArrowLeft: 'left', KeyD: 'right', ArrowRight: 'right' };
   const movement = { forward: false, backward: false, left: false, right: false };
   let lastNearby = '';
   let running = true;
   let raf = 0;
   const clock = new THREE.Clock();
-  const radius = .38;
   const collides = (x, z) => {
     if (Math.abs(x) > 54 || Math.abs(z) > 54) return true;
-    if (Math.hypot(x - 24, z + 18) < 9.4 + radius) return true;
-    return collisionBoxes.some((box) => x + radius > box.minX && x - radius < box.maxX && z + radius > box.minZ && z - radius < box.maxZ);
+    if (Math.hypot(x - 24, z + 18) < 9.4 + PLAYER_RADIUS) return true;
+    return collisionBoxes.some((box) => x + PLAYER_RADIUS > box.minX && x - PLAYER_RADIUS < box.maxX && z + PLAYER_RADIUS > box.minZ && z - PLAYER_RADIUS < box.maxZ);
   };
   const onKeyDown = (event) => {
     if (keys[event.code]) { movement[keys[event.code]] = true; event.preventDefault(); }
@@ -322,12 +321,12 @@ function createScene(container, quality, onNearby, onLocked) {
       if (movement.right) controls.moveRight(speed * delta);
       const xAfter = player.position.x, zAfter = player.position.z;
       if (collides(xAfter, zAfter)) {
-        if (!collides(xAfter, zBefore)) { player.position.z = zBefore; }
-        else if (!collides(xBefore, zAfter)) { player.position.x = xBefore; }
+        if (!collides(xAfter, zBefore)) player.position.z = zBefore;
+        else if (!collides(xBefore, zAfter)) player.position.x = xBefore;
         else { player.position.x = xBefore; player.position.z = zBefore; }
       }
       const terrainHeight = Math.max(0, (Math.sin(player.position.x * .12) * Math.cos(player.position.z * .09) * 1.2 + Math.sin((player.position.x + player.position.z) * .055) * 2.1) * Math.max(0, Math.min(1, (Math.hypot(player.position.x, player.position.z) - 13) / 18));
-      player.position.y = terrainHeight + 1.7;
+      player.position.y = terrainHeight + PLAYER_EYE_HEIGHT;
     }
     let nearest = null, nearestDistance = INTERACT_DISTANCE;
     for (const station of markers) {
