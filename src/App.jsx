@@ -1,492 +1,454 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { PointerLockControls } from 'three/examples/jsm/controls/PointerLockControls.js';
 
-const portfolioData = {
+const portfolio = {
   about: {
-    title: 'About Me',
-    summary:
-      'I am Shaik Vali Basha, a BCA graduate in Data Science and a current MCA student. I enjoy data analysis, AI exploration, content creation, and turning ideas into clear stories and usable digital experiences.',
-    bulletPoints: [
-      'BCA in Data Science from Krishna Chaitanya Degree College',
-      'MCA expected April 2027 at The Krishna Chaitanya Institute of Science and Technology',
-      'Open to entry-level IT, data analytics, and technology support opportunities'
-    ]
+    title: 'About me', room: 'Welcome lounge',
+    body: 'Shaik Vali Basha is a BCA graduate in Data Science and is currently pursuing an MCA. His interests include data science, AI, content creation, and video editing.',
+    details: ['BCA in Data Science · Krishna Chaitanya Degree College', 'MCA in progress · expected April 2027', 'Seeking entry-level IT, data, or technology-support roles']
   },
   skills: {
-    title: 'Skills & Tools',
-    tags: ['Python', 'Java', 'SQL', 'Power BI', 'Tableau', 'Excel', 'Data Visualization', 'AI Tools', 'Report Writing']
+    title: 'Skills & expertise', room: 'Skills studio',
+    groups: [
+      ['Programming', 'Python', 'Java', 'SQL'],
+      ['Analytics', 'Power BI', 'Tableau', 'Advanced Excel', 'Data visualization'],
+      ['AI tools', 'ChatGPT', 'Google Gemini', 'Claude AI', 'Microsoft Copilot', 'GitHub Copilot', 'Perplexity AI'],
+      ['Professional', 'Report writing', 'Analytical thinking', 'Communication', 'Team collaboration', 'Time management']
+    ]
   },
   projects: {
-    title: 'Projects',
-    items: [
-      {
-        name: 'Sales Analytics & Dashboard Reporting',
-        description: 'Built dashboards to visualize sales trends, KPIs, and regional performance with SQL-connected reporting.'
-      },
-      {
-        name: 'Structured Data Pattern Analysis',
-        description: 'Used Python and ML techniques to investigate patterns in structured datasets and present the insights clearly.'
-      }
+    title: 'Projects', room: 'Project gallery',
+    projects: [
+      { name: 'Sales Analytics & Dashboard Reporting', tools: 'Power BI · SQL · Tableau', description: 'Interactive dashboards for sales trends, KPIs, and regional performance. Connected a SQL database and cleaned data with Power Query Editor.' },
+      { name: 'Structured Data Pattern Analysis', tools: 'Python · Pandas · Scikit-learn', description: 'Machine-learning analysis of structured datasets, including preprocessing, feature analysis, and visualization.' }
     ]
   },
   internships: {
-    title: 'Internships',
-    items: [
-      'AI Transformative Learning Intern — TechSaksham (Microsoft & SAP CSR, AICTE Recognized)',
-      'Data Analytics using AI-LLMs Intern — AICTE / Vodafone Idea Foundation / VOIS for Tech',
-      'AI/ML Data Analysis Intern — Next24tech Technology and Services'
+    title: 'Internships', room: 'Learning room',
+    entries: [
+      { role: 'AI Transformative Learning Intern', org: 'TechSaksham · Edunet Foundation · Microsoft & SAP CSR · AICTE recognized', date: 'Dec 2024 – Jan 2025', work: 'Studied AI governance and responsible AI; explored Microsoft Copilot and documented AI use cases.' },
+      { role: 'Data Analytics using AI-LLMs Intern', org: 'AICTE · Vodafone Idea Foundation · VOIS for Tech / Edunet Foundation', date: 'Oct 2024 – Nov 2024', work: 'Prepared, cleaned, and visualized data with AI/LLM tools; developed Power BI and Tableau dashboards.' },
+      { role: 'AI/ML Data Analysis Intern', org: 'Next24tech Technology and Services · AICTE Virtual Internship', date: 'Apr 2024 – Jul 2024', work: 'Supported structured-data pattern analysis, preprocessing, and clear visual reporting.' }
     ]
   },
   content: {
-    title: 'Content Creation',
-    links: [
-      { label: 'MindBodha', href: 'https://www.instagram.com/mindbodha?cplk=b2F2dnV6NWV1M2Np' },
-      { label: 'MindBodha YouTube', href: 'https://youtube.com/@mindbodha?si=PFxzFDOeYev4zhrL' },
-      { label: 'BujjiBlitz', href: 'https://www.instagram.com/bujjiblitz?psln=MTZ6djE5eGV5dHVpZA==' },
-      { label: 'BujjiBlitz YouTube', href: 'https://youtube.com/@bujjiblitz?si=LsuZ4igcjVIsUOyk' },
-      { label: 'TrulyValli', href: 'https://www.instagram.com/trulyvalli?rpxt=MXhldXZqcWI5dWQ4cg==' },
-      { label: 'TrulyValli YouTube', href: 'https://youtube.com/@trulyvalli?si=xFzINlty0yCBJHDh' }
+    title: 'Content creation', room: 'Creator room',
+    channels: [
+      { name: 'MindBodha', description: 'Mysterious facts, history, and educational content.', instagram: 'https://www.instagram.com/mindbodha?cplk=b2F2dnV6NWV1M2Np', youtube: 'https://youtube.com/@mindbodha?si=PFxzFDOeYev4zhrL' },
+      { name: 'BujjiBlitz', description: 'Gaming-related content.', instagram: 'https://www.instagram.com/bujjiblitz?psln=MTZ6djE5eGV5dHVpZA==', youtube: 'https://youtube.com/@bujjiblitz?si=LsuZ4igcjVIsUOyk' },
+      { name: 'TrulyValli', description: 'Personal vlog channel.', instagram: 'https://www.instagram.com/trulyvalli?rpxt=MXhldXZqcWI5dWQ4cg==', youtube: 'https://youtube.com/@trulyvalli?si=xFzINlty0yCBJHDh' }
+    ]
+  },
+  education: {
+    title: 'Education', room: 'Study',
+    entries: [
+      'MCA · The Krishna Chaitanya Institute of Science and Technology (KIST), Nellore · expected April 2027',
+      'BCA, Data Science · Krishna Chaitanya Degree College, Vikrama Simhapuri University · Aug 2022 – May 2025 · 80%',
+      "Intermediate, MPC · Rao's Junior College, Nellore · 55%",
+      'SSC · MPL High School, Venkateswarapuram, Nellore · 91.3%',
+      'Also pursuing Mechanic Diesel, NSQF Level 3 · NIMI / Skill India Digital'
+    ]
+  },
+  certifications: {
+    title: 'Certifications', room: 'Credentials',
+    entries: [
+      'IBM AI Product Manager — IBM',
+      'Google AI Essentials — Google / Coursera, 2026',
+      'Google Prompting Essentials — Google / Coursera, 2026',
+      'Oracle Cloud AI Foundations Associate — Oracle, 2025',
+      'Identity Security for the AI Age — Saviynt, 2025',
+      'Career Essentials in Generative AI — Microsoft & LinkedIn, 2024'
     ]
   },
   contact: {
-    title: 'Contact',
-    details: {
-      phone: '+91-8639563286',
-      email: 'skvallibasha6@gmail.com',
-      location: 'Nellore, Andhra Pradesh',
-      linkedin: 'https://www.linkedin.com/in/valibasha6',
-      relocation: 'Open to relocate Pan India'
-    }
+    title: 'Contact', room: 'Contact study',
+    phone: '+91-8639563286', email: 'skvallibasha6@gmail.com', location: 'Nellore, Andhra Pradesh',
+    linkedin: 'https://www.linkedin.com/in/valibasha6', relocation: 'Open to relocate Pan India'
   }
 };
 
-const interactables = [
-  { id: 'about', position: [8, 1.4, 6.5], label: 'About Me' },
-  { id: 'skills', position: [2.5, 1.3, -10], label: 'Skills' },
-  { id: 'projects', position: [-10, 1.4, 2], label: 'Projects' },
-  { id: 'content', position: [-12, 1.4, -8], label: 'Content' },
-  { id: 'internships', position: [12, 1.5, -12], label: 'Internships' },
-  { id: 'contact', position: [-2, 1.3, 11], label: 'Contact' }
+// Six open-plan rooms, connected by 1.8 m passages through the partitions.
+const stations = [
+  { id: 'about', position: [-8, 1.7, 4.7] }, { id: 'skills', position: [0, 1.7, 4.7] }, { id: 'projects', position: [8, 1.7, 4.7] },
+  { id: 'content', position: [-8, 1.7, -4.7] }, { id: 'internships', position: [0, 1.7, -4.7] }, { id: 'contact', position: [8, 1.7, -4.7] }
 ];
+const INTERACT_DISTANCE = 3.1;
+
+function makeTextTexture(title, subtitle) {
+  const canvas = document.createElement('canvas');
+  canvas.width = 768; canvas.height = 256;
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = '#24231f'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = '#c9a875'; ctx.fillRect(0, 0, 9, canvas.height);
+  ctx.fillStyle = '#f1eadc'; ctx.font = '600 48px Georgia'; ctx.fillText(title, 38, 104);
+  ctx.fillStyle = '#c3b9a7'; ctx.font = '28px Arial'; ctx.fillText(subtitle, 40, 158);
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  return texture;
+}
+
+function createScene(container, quality, onNearby, onLocked) {
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color('#b6c8cf');
+  scene.fog = new THREE.FogExp2('#b6c8cf', 0.0085);
+  const camera = new THREE.PerspectiveCamera(68, container.clientWidth / container.clientHeight, 0.1, 180);
+  camera.position.set(0, 1.7, 18);
+  const renderer = new THREE.WebGLRenderer({ antialias: quality !== 'low', powerPreference: 'high-performance' });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, quality === 'high' ? 1.75 : 1.25));
+  renderer.setSize(container.clientWidth, container.clientHeight);
+  renderer.shadowMap.enabled = quality !== 'low';
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.outputColorSpace = THREE.SRGBColorSpace;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.0;
+  container.appendChild(renderer.domElement);
+
+  const controls = new PointerLockControls(camera, renderer.domElement);
+  scene.add(controls.getObject());
+  controls.addEventListener('lock', () => onLocked(true));
+  controls.addEventListener('unlock', () => onLocked(false));
+
+  scene.add(new THREE.HemisphereLight('#d8e6e9', '#59614e', 1.35));
+  const sun = new THREE.DirectionalLight('#fff0d9', 2.2);
+  sun.position.set(-28, 38, 20);
+  sun.castShadow = quality !== 'low';
+  sun.shadow.mapSize.set(quality === 'high' ? 2048 : 1024, quality === 'high' ? 2048 : 1024);
+  Object.assign(sun.shadow.camera, { left: -38, right: 38, top: 38, bottom: -38, near: 1, far: 100 });
+  sun.shadow.bias = -0.00015;
+  scene.add(sun);
+
+  const groundMaterial = new THREE.MeshStandardMaterial({ color: '#66745b', roughness: 1 });
+  const terrainGeometry = new THREE.PlaneGeometry(120, 120, 100, 100);
+  const positions = terrainGeometry.attributes.position;
+  for (let i = 0; i < positions.count; i += 1) {
+    const x = positions.getX(i), z = positions.getY(i);
+    const outsideEstate = Math.max(0, Math.min(1, (Math.hypot(x, z) - 13) / 18));
+    const hills = (Math.sin(x * 0.12) * Math.cos(z * 0.09) * 1.2 + Math.sin((x + z) * 0.055) * 2.1) * outsideEstate;
+    positions.setZ(i, hills);
+  }
+  terrainGeometry.computeVertexNormals();
+  const terrain = new THREE.Mesh(terrainGeometry, groundMaterial);
+  terrain.rotation.x = -Math.PI / 2;
+  terrain.receiveShadow = true;
+  scene.add(terrain);
+
+  // Distant subdued ridge forms add atmospheric depth; the immediate walking area remains level.
+  const ridgeMaterial = new THREE.MeshStandardMaterial({ color: '#7d8b83', roughness: 1, flatShading: true });
+  for (let i = 0; i < 13; i += 1) {
+    const ridge = new THREE.Mesh(new THREE.IcosahedronGeometry(1, 1), ridgeMaterial);
+    const angle = i / 13 * Math.PI * 2;
+    ridge.position.set(Math.cos(angle) * 48, 4.5, Math.sin(angle) * 48);
+    ridge.scale.set(10 + (i % 3) * 2, 5 + (i % 4) * 1.3, 8);
+    ridge.rotation.y = angle;
+    ridge.receiveShadow = true;
+    scene.add(ridge);
+  }
+
+  // Instanced vegetation keeps draw calls low; restrained layered crowns avoid toy-like spheres.
+  const treeData = [];
+  let seed = 19371;
+  const random = () => { seed = (seed * 1664525 + 1013904223) >>> 0; return seed / 4294967296; };
+  for (let i = 0; i < (quality === 'low' ? 80 : 155); i += 1) {
+    const angle = random() * Math.PI * 2;
+    const radius = 16 + random() * 43;
+    const x = Math.cos(angle) * radius, z = Math.sin(angle) * radius;
+    if (Math.abs(x) < 14 && Math.abs(z) < 10) continue;
+    if (Math.hypot(x - 24, z + 18) < 13) continue;
+    treeData.push({ x, z, scale: 0.8 + random() * 0.65, yaw: random() * Math.PI * 2 });
+  }
+  const trunkGeometry = new THREE.CylinderGeometry(0.13, 0.24, 3.6, 7);
+  const trunkMaterial = new THREE.MeshStandardMaterial({ color: '#554431', roughness: 1 });
+  const trunks = new THREE.InstancedMesh(trunkGeometry, trunkMaterial, treeData.length);
+  trunks.castShadow = quality !== 'low'; trunks.receiveShadow = true;
+  const crownGeometry = new THREE.IcosahedronGeometry(1.25, 1);
+  const crownMaterial = new THREE.MeshStandardMaterial({ color: '#405b43', roughness: 1, flatShading: true });
+  const crowns = new THREE.InstancedMesh(crownGeometry, crownMaterial, treeData.length * 3);
+  crowns.castShadow = quality === 'high'; crowns.receiveShadow = true;
+  const dummy = new THREE.Object3D();
+  treeData.forEach((tree, i) => {
+    dummy.position.set(tree.x, 1.7 * tree.scale, tree.z); dummy.scale.set(tree.scale, tree.scale, tree.scale); dummy.rotation.y = tree.yaw; dummy.updateMatrix(); trunks.setMatrixAt(i, dummy.matrix);
+    for (let layer = 0; layer < 3; layer += 1) {
+      dummy.position.set(tree.x + (layer - 1) * 0.24 * tree.scale, (3.0 + layer * 0.78) * tree.scale, tree.z + (layer % 2 ? 0.18 : -0.15) * tree.scale);
+      dummy.scale.set(tree.scale * (1.05 - layer * 0.12), tree.scale * 0.86, tree.scale * (1.0 - layer * 0.1));
+      dummy.rotation.set(0, tree.yaw + layer, 0); dummy.updateMatrix(); crowns.setMatrixAt(i * 3 + layer, dummy.matrix);
+    }
+  });
+  scene.add(trunks, crowns);
+
+  // Lake away from the visitor route. Physically based but intentionally restrained water.
+  const lake = new THREE.Mesh(new THREE.CircleGeometry(9, 80), new THREE.MeshPhysicalMaterial({ color: '#779ba0', roughness: 0.24, metalness: 0.03, clearcoat: 0.75, clearcoatRoughness: 0.18 }));
+  lake.rotation.x = -Math.PI / 2; lake.position.set(24, 0.12, -18); lake.receiveShadow = true; scene.add(lake);
+  const shore = new THREE.Mesh(new THREE.RingGeometry(9, 10.1, 80), new THREE.MeshStandardMaterial({ color: '#887d65', roughness: 1, side: THREE.DoubleSide }));
+  shore.rotation.x = -Math.PI / 2; shore.position.set(24, 0.08, -18); scene.add(shore);
+
+  const mansion = new THREE.Group();
+  const stone = new THREE.MeshStandardMaterial({ color: '#c9c4b8', roughness: 0.82 });
+  const timber = new THREE.MeshStandardMaterial({ color: '#4b4032', roughness: 0.7 });
+  const glass = new THREE.MeshPhysicalMaterial({ color: '#82999a', roughness: 0.12, metalness: 0.12, transparent: true, opacity: 0.56, transmission: 0.25, clearcoat: 0.9 });
+  const wood = new THREE.MeshStandardMaterial({ color: '#604b35', roughness: 0.68 });
+  const floorMat = new THREE.MeshStandardMaterial({ color: '#887c68', roughness: 0.88 });
+  const addBox = (parent, size, pos, material, cast = true) => {
+    const mesh = new THREE.Mesh(new THREE.BoxGeometry(...size), material);
+    mesh.position.set(...pos); mesh.castShadow = cast && quality !== 'low'; mesh.receiveShadow = true; parent.add(mesh); return mesh;
+  };
+  // Single level, open roof so the visitor can see interiors; sensible 24 x 16 m dimensions.
+  addBox(mansion, [24, .38, 16], [0, .1, 0], floorMat, false);
+  addBox(mansion, [24, .3, 1.2], [0, 3.35, -8], timber);
+  addBox(mansion, [1.2, 3.3, 16], [-12, 1.8, 0], stone);
+  addBox(mansion, [1.2, 3.3, 16], [12, 1.8, 0], stone);
+  // Front facade leaves a central 3 m entrance; rear is continuous.
+  addBox(mansion, [9.6, 3.3, .45], [-7.2, 1.8, 8], stone);
+  addBox(mansion, [9.6, 3.3, .45], [7.2, 1.8, 8], stone);
+  addBox(mansion, [24, 3.3, .45], [0, 1.8, -8], stone);
+  // Open door frame and overhead lintel.
+  addBox(mansion, [.18, 3.3, .55], [-1.5, 1.8, 8], timber);
+  addBox(mansion, [.18, 3.3, .55], [1.5, 1.8, 8], timber);
+  addBox(mansion, [3.15, .22, .58], [0, 3.48, 8], timber);
+  // Interior partitions with centered openings to create a navigable 3 x 2 room plan.
+  [-4, 4].forEach((x) => {
+    addBox(mansion, [.22, 3.1, 6.4], [x, 1.7, -4.8], stone);
+    addBox(mansion, [.22, 3.1, 6.4], [x, 1.7, 4.8], stone);
+    addBox(mansion, [.22, .35, 3.2], [x, 3.05, 0], timber);
+  });
+  // Central cross partition, with door openings aligned to each room aisle.
+  [-8, 0, 8].forEach((x) => {
+    const left = x - 3.1, right = x + 3.1;
+    if (left > -12) addBox(mansion, [Math.max(0.1, left + 12), 3.1, .2], [(-12 + left) / 2, 1.7, 0], stone);
+    if (right < 12) addBox(mansion, [Math.max(0.1, 12 - right), 3.1, .2], [(right + 12) / 2, 1.7, 0], stone);
+    addBox(mansion, [6.2, .35, .22], [x, 3.05, 0], timber);
+  });
+
+  // Window glazing and mullions on front/rear facades.
+  [-9, -6, -3, 3, 6, 9].forEach((x) => {
+    const pane = addBox(mansion, [1.7, 1.45, .08], [x, 2.05, 7.72], glass, false);
+    pane.castShadow = false;
+    addBox(mansion, [1.85, .09, .12], [x, 2.05, 7.65], timber, false);
+    addBox(mansion, [.08, 1.55, .12], [x, 2.05, 7.65], timber, false);
+    const rearPane = addBox(mansion, [1.8, 1.45, .08], [x, 2.05, -7.72], glass, false); rearPane.castShadow = false;
+  });
+  // Roof fascia and covered entry canopy.
+  addBox(mansion, [24.7, .28, .32], [0, 3.65, 7.86], timber);
+  addBox(mansion, [24.7, .28, .32], [0, 3.65, -7.86], timber);
+  addBox(mansion, [5.2, .22, 2.7], [0, 3.65, 9.0], timber);
+  [-2.2, 2.2].forEach((x) => addBox(mansion, [.18, 3.35, .18], [x, 1.8, 9.8], timber));
+
+  // Room furnishings: wood desks, shelves, seating and wall-mounted information plaques.
+  const roomFurniture = [
+    { id: 'about', x: -8, z: 4.7, label: 'WELCOME', sub: 'About Vali Basha' },
+    { id: 'skills', x: 0, z: 4.7, label: 'SKILLS', sub: 'Data · AI · Tools' },
+    { id: 'projects', x: 8, z: 4.7, label: 'PROJECTS', sub: 'Selected work' },
+    { id: 'content', x: -8, z: -4.7, label: 'CREATOR', sub: 'Channels & content' },
+    { id: 'internships', x: 0, z: -4.7, label: 'EXPERIENCE', sub: 'Virtual internships' },
+    { id: 'contact', x: 8, z: -4.7, label: 'CONTACT', sub: 'Connect with Vali' }
+  ];
+  const collisionBoxes = [
+    { minX: -12, maxX: 12, minZ: -8.3, maxZ: -7.65 },
+    { minX: -12.3, maxX: -11.65, minZ: -8, maxZ: 8.3 },
+    { minX: 11.65, maxX: 12.3, minZ: -8, maxZ: 8.3 },
+    { minX: -12, maxX: -1.65, minZ: 7.7, maxZ: 8.3 },
+    { minX: 1.65, maxX: 12, minZ: 7.7, maxZ: 8.3 },
+    ...[-4, 4].flatMap((x) => [
+      { minX: x - .2, maxX: x + .2, minZ: -8, maxZ: -1.6 },
+      { minX: x - .2, maxX: x + .2, minZ: 1.6, maxZ: 8 }
+    ]),
+    ...[-12, -4.9, 1.1, 7.1].map((x, i) => ({ minX: x, maxX: i === 0 || i === 3 ? x + 3 : x + 3, minZ: -.18, maxZ: .18 }))
+  ];
+
+  roomFurniture.forEach((room) => {
+    const sign = new THREE.Mesh(new THREE.PlaneGeometry(4.4, 1.45), new THREE.MeshStandardMaterial({ map: makeTextTexture(room.label, room.sub), roughness: .8, metalness: .05 }));
+    sign.position.set(room.x, 2.65, room.z < 0 ? -7.82 : 7.82);
+    sign.rotation.y = room.z < 0 ? Math.PI : 0;
+    mansion.add(sign);
+    const deskZ = room.z + (room.z > 0 ? -1.8 : 1.8);
+    addBox(mansion, [3.2, .16, 1.2], [room.x, .95, deskZ], wood);
+    addBox(mansion, [.14, .9, .14], [room.x - 1.35, .48, deskZ], timber);
+    addBox(mansion, [.14, .9, .14], [room.x + 1.35, .48, deskZ], timber);
+    addBox(mansion, [1.7, 1.0, .08], [room.x, 1.85, room.z < 0 ? -7.75 : 7.75], timber, false);
+    // Quiet warm wall lights, non-emissive architecture with restrained illumination.
+    const sconce = new THREE.PointLight('#f0d7ae', .45, 5, 2);
+    sconce.position.set(room.x, 2.6, room.z < 0 ? -6.9 : 6.9);
+    mansion.add(sconce);
+  });
+  scene.add(mansion);
+
+  // Small exterior path stones lead from start point to front entrance.
+  const pathMat = new THREE.MeshStandardMaterial({ color: '#aaa18e', roughness: .95 });
+  for (let i = 0; i < 7; i += 1) {
+    const slab = new THREE.Mesh(new THREE.BoxGeometry(2.5, .08, 1.35), pathMat);
+    slab.position.set(0, .08, 10.5 + i * 1.45); slab.receiveShadow = true; scene.add(slab);
+  }
+
+  const markers = stations.map((station) => {
+    const plaque = new THREE.Mesh(new THREE.BoxGeometry(1.0, 1.25, .12), new THREE.MeshStandardMaterial({ color: '#9a845e', roughness: .55, metalness: .28 }));
+    plaque.position.set(station.position[0], 1.45, station.position[2] + (station.position[2] > 0 ? 2 : -2));
+    plaque.castShadow = true; scene.add(plaque);
+    return { ...station, marker: plaque };
+  });
+
+  const keys = { KeyW: 'forward', ArrowUp: 'forward', KeyS: 'backward', ArrowDown: 'backward', KeyA: 'left', ArrowLeft: 'left', KeyD: 'right', ArrowRight: 'right' };
+  const movement = { forward: false, backward: false, left: false, right: false };
+  let lastNearby = '';
+  let running = true;
+  let raf = 0;
+  const clock = new THREE.Clock();
+  const radius = .38;
+  const collides = (x, z) => {
+    if (Math.abs(x) > 54 || Math.abs(z) > 54) return true;
+    if (Math.hypot(x - 24, z + 18) < 9.4 + radius) return true;
+    return collisionBoxes.some((box) => x + radius > box.minX && x - radius < box.maxX && z + radius > box.minZ && z - radius < box.maxZ);
+  };
+  const onKeyDown = (event) => {
+    if (keys[event.code]) { movement[keys[event.code]] = true; event.preventDefault(); }
+    if (event.code === 'KeyE' && lastNearby) onNearby(lastNearby);
+  };
+  const onKeyUp = (event) => { if (keys[event.code]) movement[keys[event.code]] = false; };
+  const clearKeys = () => Object.keys(movement).forEach((key) => { movement[key] = false; });
+  window.addEventListener('keydown', onKeyDown);
+  window.addEventListener('keyup', onKeyUp);
+  window.addEventListener('blur', clearKeys);
+
+  const tick = () => {
+    if (!running) return;
+    raf = requestAnimationFrame(tick);
+    const delta = Math.min(clock.getDelta(), .04);
+    const player = controls.getObject();
+    const xBefore = player.position.x, zBefore = player.position.z;
+    if (controls.isLocked) {
+      const speed = 4.4;
+      if (movement.forward) controls.moveForward(speed * delta);
+      if (movement.backward) controls.moveForward(-speed * delta);
+      if (movement.left) controls.moveRight(-speed * delta);
+      if (movement.right) controls.moveRight(speed * delta);
+      const xAfter = player.position.x, zAfter = player.position.z;
+      if (collides(xAfter, zAfter)) {
+        if (!collides(xAfter, zBefore)) { player.position.z = zBefore; }
+        else if (!collides(xBefore, zAfter)) { player.position.x = xBefore; }
+        else { player.position.x = xBefore; player.position.z = zBefore; }
+      }
+      const terrainHeight = Math.max(0, (Math.sin(player.position.x * .12) * Math.cos(player.position.z * .09) * 1.2 + Math.sin((player.position.x + player.position.z) * .055) * 2.1) * Math.max(0, Math.min(1, (Math.hypot(player.position.x, player.position.z) - 13) / 18));
+      player.position.y = terrainHeight + 1.7;
+    }
+    let nearest = null, nearestDistance = INTERACT_DISTANCE;
+    for (const station of markers) {
+      const distance = Math.hypot(player.position.x - station.position[0], player.position.z - station.position[2]);
+      if (distance < nearestDistance) { nearest = station.id; nearestDistance = distance; }
+    }
+    if (nearest !== lastNearby) { lastNearby = nearest || ''; onNearby(nearest || ''); }
+    renderer.render(scene, camera);
+  };
+  tick();
+
+  const resize = () => {
+    camera.aspect = container.clientWidth / Math.max(1, container.clientHeight);
+    camera.updateProjectionMatrix();
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, quality === 'high' ? 1.75 : 1.25));
+    renderer.setSize(container.clientWidth, container.clientHeight);
+  };
+  window.addEventListener('resize', resize);
+  return {
+    controls,
+    dispose() {
+      running = false; cancelAnimationFrame(raf);
+      window.removeEventListener('keydown', onKeyDown); window.removeEventListener('keyup', onKeyUp);
+      window.removeEventListener('blur', clearKeys); window.removeEventListener('resize', resize);
+      controls.dispose();
+      scene.traverse((object) => {
+        if (object.geometry) object.geometry.dispose();
+        if (object.material) (Array.isArray(object.material) ? object.material : [object.material]).forEach((material) => {
+          if (material.map) material.map.dispose(); material.dispose();
+        });
+      });
+      renderer.dispose(); renderer.domElement.remove();
+    }
+  };
+}
 
 function App() {
   const mountRef = useRef(null);
+  const worldRef = useRef(null);
+  const [quality, setQuality] = useState('medium');
   const [started, setStarted] = useState(false);
-  const [activePanel, setActivePanel] = useState('about');
-  const [activeTitle, setActiveTitle] = useState('About Me');
-  const [activeContent, setActiveContent] = useState(portfolioData.about);
-  const [mobileHint, setMobileHint] = useState('');
+  const [locked, setLocked] = useState(false);
+  const [nearby, setNearby] = useState('');
+  const [active, setActive] = useState('about');
+  const [sceneError, setSceneError] = useState('');
+  const isMobile = typeof window !== 'undefined' && window.matchMedia('(max-width: 760px)').matches;
 
   useEffect(() => {
     const container = mountRef.current;
-    if (!container) return;
-
-    const scene = new THREE.Scene();
-    scene.background = new THREE.Color('#b9d4e2');
-    scene.fog = new THREE.Fog('#b9d4e2', 25, 95);
-
-    const camera = new THREE.PerspectiveCamera(66, window.innerWidth / window.innerHeight, 0.1, 200);
-    camera.position.set(12, 2, 20);
-
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    renderer.setSize(container.clientWidth, container.clientHeight);
-    renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-    container.appendChild(renderer.domElement);
-
-    const controls = new PointerLockControls(camera, document.body);
-    scene.add(controls.getObject());
-
-    const ambient = new THREE.HemisphereLight('#dfeaf6', '#4b5b42', 1.7);
-    scene.add(ambient);
-
-    const sun = new THREE.DirectionalLight('#fff8ef', 1.1);
-    sun.position.set(18, 28, 12);
-    sun.castShadow = true;
-    sun.shadow.mapSize.set(2048, 2048);
-    sun.shadow.camera.left = -40;
-    sun.shadow.camera.right = 40;
-    sun.shadow.camera.top = 40;
-    sun.shadow.camera.bottom = -40;
-    sun.shadow.camera.near = 1;
-    sun.shadow.camera.far = 80;
-    scene.add(sun);
-
-    // Ground and terrain
-    const ground = new THREE.Mesh(
-      new THREE.CircleGeometry(58, 128),
-      new THREE.MeshStandardMaterial({
-        color: '#49684a',
-        roughness: 1,
-        metalness: 0.02
-      })
-    );
-    ground.rotation.x = -Math.PI / 2;
-    ground.receiveShadow = true;
-    scene.add(ground);
-
-    const terrainMaterial = new THREE.MeshStandardMaterial({
-      color: '#6a7d5c',
-      roughness: 1,
-      metalness: 0
-    });
-
-    const hills = new THREE.Group();
-    for (let i = 0; i < 28; i += 1) {
-      const hill = new THREE.Mesh(
-        new THREE.ConeGeometry(5 + Math.random() * 7, 8 + Math.random() * 9, 24),
-        terrainMaterial
-      );
-      hill.position.set(
-        (Math.random() - 0.5) * 90,
-        2 + Math.random() * 7,
-        (Math.random() - 0.5) * 90
-      );
-      hill.rotation.z = Math.random() * 2 * Math.PI;
-      hill.castShadow = true;
-      hill.receiveShadow = true;
-      hills.add(hill);
+    if (!container) return undefined;
+    try {
+      worldRef.current = createScene(container, quality, (id) => setNearby(id), setLocked);
+    } catch (error) {
+      console.error('Unable to initialize the WebGL portfolio scene.', error);
+      setSceneError('3D preview could not start in this browser. Use the accessible portfolio navigation below.');
     }
-    scene.add(hills);
+    return () => { worldRef.current?.dispose(); worldRef.current = null; };
+  }, [quality]);
 
-    // Trees
-    const treeGeometry = new THREE.CylinderGeometry(0.18, 0.22, 2.2, 8);
-    const leafMaterial = new THREE.MeshStandardMaterial({ color: '#2d5a3a', roughness: 1 });
-    const trunkMaterial = new THREE.MeshStandardMaterial({ color: '#53391d', roughness: 1 });
-    const treeGroup = new THREE.Group();
-    for (let i = 0; i < 90; i += 1) {
-      const trunk = new THREE.Mesh(treeGeometry, trunkMaterial);
-      const foliage = new THREE.Mesh(new THREE.SphereGeometry(1.25 + Math.random() * 0.75, 18, 18), leafMaterial);
-      const x = (Math.random() - 0.5) * 80;
-      const z = (Math.random() - 0.5) * 80;
-      if (Math.abs(x) < 10 && Math.abs(z) < 10) continue;
-      trunk.position.set(x, 1.1, z);
-      foliage.position.set(x, 3.5 + Math.random() * 0.7, z);
-      foliage.scale.y = 0.9 + Math.random() * 0.5;
-      foliage.castShadow = true;
-      foliage.receiveShadow = true;
-      trunk.castShadow = true;
-      trunk.receiveShadow = true;
-      treeGroup.add(trunk);
-      treeGroup.add(foliage);
-    }
-    scene.add(treeGroup);
-
-    // Water body
-    const lake = new THREE.Mesh(
-      new THREE.CircleGeometry(10, 64),
-      new THREE.MeshPhysicalMaterial({
-        color: '#70a4d8',
-        transparent: true,
-        opacity: 0.82,
-        transmission: 0.5,
-        roughness: 0.2,
-        metalness: 0.05,
-        clearcoat: 1,
-        clearcoatRoughness: 0.2
-      })
-    );
-    lake.rotation.x = -Math.PI / 2;
-    lake.position.set(24, 0.15, -22);
-    scene.add(lake);
-
-    // Rocks
-    const rockMaterial = new THREE.MeshStandardMaterial({ color: '#6d6f70', roughness: 1 });
-    for (let i = 0; i < 22; i += 1) {
-      const rock = new THREE.Mesh(new THREE.DodecahedronGeometry(0.6 + Math.random() * 1.1, 0), rockMaterial);
-      rock.position.set((Math.random() - 0.5) * 70, 0.5, (Math.random() - 0.5) * 70);
-      rock.scale.set(1, 0.75 + Math.random() * 0.5, 1);
-      rock.castShadow = true;
-      rock.receiveShadow = true;
-      scene.add(rock);
-    }
-
-    // Mansion
-    const mansion = new THREE.Group();
-    const wallMaterial = new THREE.MeshStandardMaterial({ color: '#d9dfe6', roughness: 0.9, metalness: 0.08 });
-    const accentMaterial = new THREE.MeshStandardMaterial({ color: '#515b68', roughness: 0.8, metalness: 0.18 });
-    const glassMaterial = new THREE.MeshPhysicalMaterial({
-      color: '#a7dfff',
-      transparent: true,
-      opacity: 0.72,
-      transmission: 0.5,
-      roughness: 0.1,
-      metalness: 0.15,
-      clearcoat: 1
-    });
-    const floorMaterial = new THREE.MeshStandardMaterial({ color: '#9ea7b5', roughness: 0.95, metalness: 0.04 });
-
-    const mainBody = new THREE.Mesh(new THREE.BoxGeometry(14, 7.5, 10), wallMaterial);
-    mainBody.position.set(0, 4.2, 0);
-    mainBody.castShadow = true;
-    mainBody.receiveShadow = true;
-    mansion.add(mainBody);
-
-    const roof = new THREE.Mesh(new THREE.BoxGeometry(15.2, 0.8, 11.2), accentMaterial);
-    roof.position.set(0, 8.6, 0);
-    roof.castShadow = true;
-    roof.receiveShadow = true;
-    mansion.add(roof);
-
-    const entry = new THREE.Mesh(new THREE.BoxGeometry(2.4, 3.6, 0.4), wallMaterial);
-    entry.position.set(0, 1.9, 5.1);
-    mansion.add(entry);
-
-    const door = new THREE.Mesh(new THREE.BoxGeometry(1.8, 3.2, 0.14), new THREE.MeshStandardMaterial({ color: '#35271a', roughness: 0.8 }));
-    door.position.set(0, 1.7, 5.26);
-    mansion.add(door);
-
-    for (let i = 0; i < 8; i += 1) {
-      const win = new THREE.Mesh(new THREE.BoxGeometry(1.2, 1.4, 0.12), glassMaterial);
-      const x = -5 + i * 1.45;
-      const z = 5.12;
-      win.position.set(x, 4.2, z);
-      mansion.add(win);
-    }
-
-    for (let i = 0; i < 6; i += 1) {
-      const win = new THREE.Mesh(new THREE.BoxGeometry(1.2, 1.4, 0.12), glassMaterial);
-      win.position.set(-4.5 + i * 1.8, 4.2, -5.12);
-      mansion.add(win);
-    }
-
-    // Room-wing additions
-    const wing1 = new THREE.Mesh(new THREE.BoxGeometry(9, 5.6, 8), wallMaterial);
-    wing1.position.set(-13.5, 3.2, 4.2);
-    mansion.add(wing1);
-
-    const wing2 = new THREE.Mesh(new THREE.BoxGeometry(9, 5.6, 8), wallMaterial);
-    wing2.position.set(13.5, 3.2, -4.4);
-    mansion.add(wing2);
-
-    const floor = new THREE.Mesh(new THREE.BoxGeometry(21, 0.8, 14), floorMaterial);
-    floor.position.set(0, 0.45, 0);
-    mansion.add(floor);
-
-    mansion.position.set(0, 0.2, 0);
-    scene.add(mansion);
-
-    // Light pillars to indicate interactable points
-    const interactableMeshes = [];
-    interactables.forEach((item) => {
-      const marker = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.28, 0.28, 1.1, 18),
-        new THREE.MeshStandardMaterial({ color: '#9fe2ff', emissive: '#4cc5ff', emissiveIntensity: 0.8, metalness: 0.2, roughness: 0.3 })
-      );
-      marker.position.set(item.position[0], item.position[1], item.position[2]);
-      marker.castShadow = true;
-      scene.add(marker);
-      interactableMeshes.push({ ...item, marker });
-    });
-
-    const clock = new THREE.Clock();
-    const moveState = { forward: false, backward: false, left: false, right: false };
-
-    const keys = {
-      KeyW: 'forward',
-      KeyS: 'backward',
-      KeyA: 'left',
-      KeyD: 'right'
-    };
-
-    const onKeyDown = (event) => {
-      if (keys[event.code]) {
-        moveState[keys[event.code]] = true;
-      }
-      if (event.code === 'KeyE') {
-        const playerPos = controls.getObject().position;
-        const closest = interactableMeshes.reduce((best, obj) => {
-          const dist = playerPos.distanceTo(new THREE.Vector3(...obj.position));
-          return dist < best.dist ? { dist, obj } : best;
-        }, { dist: Infinity, obj: null });
-
-        if (closest.obj) {
-          const key = closest.obj.id;
-          const section = portfolioData[key];
-          if (section) {
-            setActivePanel(key);
-            setActiveTitle(section.title);
-            setActiveContent(section);
-          }
-        }
-      }
-    };
-
-    const onKeyUp = (event) => {
-      if (keys[event.code]) {
-        moveState[keys[event.code]] = false;
-      }
-    };
-
-    document.addEventListener('keydown', onKeyDown);
-    document.addEventListener('keyup', onKeyUp);
-
-    const startInteraction = () => {
-      setStarted(true);
-      controls.lock();
-    };
-
-    const startButton = document.getElementById('startButton');
-    startButton?.addEventListener('click', startInteraction);
-
-    const onResize = () => {
-      if (!container) return;
-      camera.aspect = container.clientWidth / container.clientHeight;
-      camera.updateProjectionMatrix();
-      renderer.setSize(container.clientWidth, container.clientHeight);
-    };
-
-    window.addEventListener('resize', onResize);
-
-    const animate = () => {
-      const delta = Math.min(clock.getDelta(), 0.033);
-      const speed = 8.5;
-
-      if (controls.isLocked) {
-        if (moveState.forward) controls.moveForward(speed * delta);
-        if (moveState.backward) controls.moveForward(-speed * delta);
-        if (moveState.left) controls.moveRight(-speed * delta);
-        if (moveState.right) controls.moveRight(speed * delta);
-
-        const pos = controls.getObject().position;
-        const xLimit = 32;
-        const zLimit = 32;
-        pos.x = THREE.MathUtils.clamp(pos.x, -xLimit, xLimit);
-        pos.z = THREE.MathUtils.clamp(pos.z, -zLimit, zLimit);
-        pos.y = 1.7;
-      }
-
-      lake.material.emissiveIntensity = 0.1 + Math.sin(performance.now() * 0.0015) * 0.1;
-      renderer.render(scene, camera);
-      requestAnimationFrame(animate);
-    };
-
-    animate();
-
-    return () => {
-      document.removeEventListener('keydown', onKeyDown);
-      document.removeEventListener('keyup', onKeyUp);
-      window.removeEventListener('resize', onResize);
-      startButton?.removeEventListener('click', startInteraction);
-      renderer.dispose();
-      container.removeChild(renderer.domElement);
-    };
-  }, []);
-
-  const roomContent = useMemo(() => portfolioData[activePanel] || portfolioData.about, [activePanel]);
-
-  useEffect(() => {
-    const mobile = window.matchMedia('(max-width: 768px)').matches;
-    if (mobile) setMobileHint('Tap Start Exploring, then use WASD and mouse to roam.');
-  }, []);
+  const selectSection = (id) => {
+    if (!portfolio[id]) return;
+    setActive(id);
+    if (isMobile) setStarted(true);
+  };
+  const start = () => {
+    setStarted(true);
+    if (!isMobile) worldRef.current?.controls.lock();
+  };
+  const openNearby = () => { if (nearby) selectSection(nearby); };
+  const content = portfolio[active];
 
   return (
-    <div className="app-shell">
-      <div className="hud">
-        <div className="hud-pill">Vali Basha Shaik</div>
-        <div className="hud-pill alt">Open-world portfolio</div>
-      </div>
-
-      <div className="start-overlay" style={{ opacity: started ? 0 : 1, pointerEvents: started ? 'none' : 'auto' }}>
-        <div className="welcome-panel">
-          <p className="eyebrow">Immersive portfolio</p>
-          <h1>Vali Basha Shaik</h1>
-          <p className="tagline">Content Creator · Video Editor · Data Science Enthusiast · AI Enthusiast</p>
-          <button id="startButton" className="primary-btn">Start Exploring</button>
-          <div className="controls-box">
-            <span>W A S D to move</span>
-            <span>Mouse to look</span>
-            <span>E to interact</span>
-            <span>ESC to release pointer</span>
-          </div>
-          <p className="small-note">{mobileHint || 'Use desktop controls for the full immersive experience.'}</p>
+    <main className="app-shell">
+      <div className="scene-wrap" ref={mountRef} aria-label="Three-dimensional portfolio environment" />
+      <header className="hud">
+        <a className="hud-brand" href="#home">VALI BASHA <span>SHAIK</span></a>
+        <div className="hud-tools">
+          <label className="quality-control">Quality
+            <select value={quality} onChange={(event) => setQuality(event.target.value)} aria-label="3D rendering quality">
+              <option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option>
+            </select>
+          </label>
+          <button className="hud-button" onClick={() => worldRef.current?.controls.unlock()} type="button">Pause / release</button>
+          <a className="hud-button" href="mailto:skvallibasha6@gmail.com">Contact</a>
         </div>
+      </header>
+
+      {!started && <div className="welcome-overlay">
+        <section className="welcome-card" aria-labelledby="welcome-title">
+          <p className="eyebrow">A Three.js portfolio experience</p>
+          <h1 id="welcome-title">A world of <span>work & ideas.</span></h1>
+          <p>Explore a quiet landscape and a small open-plan portfolio pavilion. This is a browser-based Three.js scene—not Unreal Engine rendering.</p>
+          <button className="primary-button" onClick={start} type="button">Start exploring</button>
+          <div className="controls-guide"><span><b>W A S D</b> move</span><span><b>Mouse</b> look</span><span><b>E</b> interact nearby</span><span><b>ESC</b> release pointer</span></div>
+          <p className="welcome-note">Mobile and keyboard users can select any section from the accessible navigation.</p>
+        </section>
+      </div>}
+
+      <div className="scene-status" aria-live="polite">
+        <span className="status-dot" />{locked ? 'Exploring · ESC to release' : 'Pointer released'}
+        {nearby && <button className="interact-prompt" onClick={openNearby} type="button">E · Open {portfolio[nearby]?.title}</button>}
       </div>
 
-      <div ref={mountRef} className="scene-wrap" />
+      <nav className="section-nav" aria-label="Portfolio sections">
+        {Object.keys(portfolio).map((id) => <button key={id} type="button" className={active === id ? 'selected' : ''} onClick={() => selectSection(id)}>{portfolio[id].title}</button>)}
+      </nav>
 
-      <div className="info-panel">
-        <div className="panel-topbar">
-          <span className="panel-label">{activeTitle}</span>
-          <span className="panel-ghost">Press E near glowing markers</span>
-        </div>
+      <aside className="portfolio-panel" aria-live="polite">
+        <div className="panel-heading"><div><span className="room-label">{content.room}</span><h2>{content.title}</h2></div><button type="button" className="close-panel" aria-label="Close section" onClick={() => setActive('about')}>↻</button></div>
+        {content.body && <><p className="panel-copy">{content.body}</p><ul>{content.details.map((item) => <li key={item}>{item}</li>)}</ul></>}
+        {content.groups && <div className="content-list">{content.groups.map(([heading, ...items]) => <div className="content-card" key={heading}><h3>{heading}</h3><div className="chips">{items.map((item) => <span className="chip" key={item}>{item}</span>)}</div></div>)}</div>}
+        {content.projects && <div className="content-list">{content.projects.map((project) => <article className="content-card" key={project.name}><h3>{project.name}</h3><p>{project.description}</p><span className="small-meta">{project.tools}</span></article>)}</div>}
+        {content.entries && <div className="content-list">{content.entries.map((entry) => typeof entry === 'string' ? <div className="content-card" key={entry}>{entry}</div> : <article className="content-card" key={entry.role}><h3>{entry.role}</h3><p className="small-meta">{entry.org} · {entry.date}</p><p>{entry.work}</p></article>)}</div>}
+        {content.channels && <div className="content-list">{content.channels.map((channel) => <article className="content-card" key={channel.name}><h3>{channel.name}</h3><p>{channel.description}</p><div className="external-links"><a href={channel.instagram} target="_blank" rel="noreferrer">Instagram ↗</a><a href={channel.youtube} target="_blank" rel="noreferrer">YouTube ↗</a></div></article>)}</div>}
+        {content.email && <div className="content-list"><div className="content-card"><p><strong>Phone:</strong> <a href="tel:+918639563286">{content.phone}</a></p><p><strong>Email:</strong> <a href={`mailto:${content.email}`}>{content.email}</a></p><p><strong>Location:</strong> {content.location}</p><p><strong>LinkedIn:</strong> <a href={content.linkedin} target="_blank" rel="noreferrer">linkedin.com/in/valibasha6 ↗</a></p><p>{content.relocation}</p></div></div>}
+      </aside>
 
-        {roomContent.title === 'About Me' && (
-          <>
-            <p>{roomContent.summary}</p>
-            <ul>
-              {roomContent.bulletPoints.map((item) => (
-                <li key={item}>{item}</li>
-              ))}
-            </ul>
-          </>
-        )}
-
-        {roomContent.title === 'Skills & Tools' && (
-          <div className="tag-grid">
-            {roomContent.tags.map((tag) => (
-              <span key={tag}>{tag}</span>
-            ))}
-          </div>
-        )}
-
-        {roomContent.title === 'Projects' && (
-          <div className="stack-list">
-            {roomContent.items.map((item) => (
-              <div key={item.name} className="stack-item">
-                <strong>{item.name}</strong>
-                <p>{item.description}</p>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {roomContent.title === 'Internships' && (
-          <ul>
-            {roomContent.items.map((item) => (
-              <li key={item}>{item}</li>
-            ))}
-          </ul>
-        )}
-
-        {roomContent.title === 'Content Creation' && (
-          <div className="link-list">
-            {roomContent.links.map((link) => (
-              <a href={link.href} target="_blank" rel="noreferrer" key={link.label}>{link.label}</a>
-            ))}
-          </div>
-        )}
-
-        {roomContent.title === 'Contact' && (
-          <ul>
-            <li>Phone: {roomContent.details.phone}</li>
-            <li>Email: {roomContent.details.email}</li>
-            <li>Location: {roomContent.details.location}</li>
-            <li>LinkedIn: <a href={roomContent.details.linkedin} target="_blank" rel="noreferrer">linkedin.com/in/valibasha6</a></li>
-            <li>{roomContent.details.relocation}</li>
-          </ul>
-        )}
-      </div>
-
-      <div className="mini-nav">
-        {Object.keys(portfolioData).map((key) => (
-          <button
-            key={key}
-            type="button"
-            onClick={() => {
-              setActivePanel(key);
-              setActiveTitle(portfolioData[key].title);
-              setActiveContent(portfolioData[key]);
-            }}
-            className={activePanel === key ? 'active' : ''}
-          >
-            {portfolioData[key].title}
-          </button>
-        ))}
-      </div>
-    </div>
+      {sceneError && <p className="scene-error" role="status">{sceneError}</p>}
+      {isMobile && <div className="mobile-note">3D mouse-look is desktop-only. Use section navigation to explore all portfolio content.</div>}
+      <footer className="site-footer">© {new Date().getFullYear()} Shaik Vali Basha · WebGL / Three.js</footer>
+    </main>
   );
 }
 
